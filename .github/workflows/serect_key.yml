@@ -1,5 +1,6 @@
 name : Serect key
 run-name : ${{github.actor}} connect to serect ky
+on: [push]
 jobs:
   example-job:
     runs-on: ubuntu-latest
