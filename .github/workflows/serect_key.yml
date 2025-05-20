@@ -1,0 +1,11 @@
+name : Serect key
+run-name : ${{github.actor}} connect to serect ky
+jobs:
+  exam:
+    runs-on: ubuntu-22.04
+    steps:
+      - name : retrieve serect
+        env :
+          super_secret: ${{ secrets.SUPERSECRET }}
+        run: |
+          exam "$super_secret"
