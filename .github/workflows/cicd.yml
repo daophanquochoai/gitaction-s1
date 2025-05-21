@@ -1,7 +1,46 @@
+#name: CICD Pipeline
+#on:
+#  push:
+#    branches: ["main"]
+#jobs:
+#  compile:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '17'
+#          distribution: 'temurin'
+#          cache: maven
+#      - name: Build with maven
+#        run: mvn -B package --file pom.xml
+#  security-check:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Trivy Fs Scan
+#        run: |
+#          sudo apt update
+#          sudo apt install gnupg lsb-release curl -y
+#          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+#          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
+#          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
+#          sudo apt update
+#          sudo apt install trivy -y
+#      - name: Trivy FS Scan
+#        run: trivy fs --format table -o fs-report.json .
+#      - name: gitleaks Install
+#        run: sudo apt install gitleaks -y
+#      - name: GitLeaks Code Scan
+#        run: gitleaks detect source . -r gitleaks-report.json -f json
+
 name: CICD Pipeline
+
 on:
   push:
     branches: ["main"]
+
 jobs:
   compile:
     runs-on: ubuntu-latest
@@ -13,24 +52,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-      - name: Build with maven
+      - name: Build with Maven
         run: mvn -B package --file pom.xml
+
   security-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trivy Fs Scan
-        run: |
-          sudo apt update
-          sudo apt install gnupg lsb-release curl -y
-          curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | \
-          sudo tee /etc/apt/sources.list.d/trivy.list > /dev/null
-          sudo apt update
-          sudo apt install trivy -y
-      - name: Trivy FS Scan
-        run: trivy fs --format table -o fs-report.json .
-      - name: gitleaks Install
-        run: sudo apt install gitleaks -y
-      - name: GitLeaks Code Scan
-        run: gitleaks detect source . -r gitleaks-report.json -f json
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.12.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: json
+          output: fs-report.json
+
+      - name: Run GitLeaks scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --report-path=gitleaks-report.json --format=json
