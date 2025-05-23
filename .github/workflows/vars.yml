@@ -1,0 +1,13 @@
+name: variable
+
+on:
+  workflow_dispatch:
+
+jobs:
+  display-variables:
+    name: ${{ vars.AB }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show variable
+        run: echo "${{ vars.AB }}"
